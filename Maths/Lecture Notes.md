@@ -606,6 +606,246 @@ $$\mathbf{v}_2 = \begin{bmatrix} 1 \\ -1 \end{bmatrix} \quad \left(\text{or gene
 * However, any vector pointing along $\mathbf{v}_1 = [1, -2]^T$ stays along that same line—it is only scaled by $\lambda_1 = -2$ (flipped and doubled in length).
 * Similarly, any vector pointing along $\mathbf{v}_2 = [1, -1]^T$ stays on its line and is scaled by $\lambda_2 = -1$ (direction inverted, same magnitude).
 
+---
+
+# Principal Component Analysis (PCA)
+
+Principal Component Analysis (PCA) is an unsupervised linear dimensionality reduction technique widely used in machine learning for feature extraction, data compression, noise reduction, and data visualization.
+
+---
+
+## 1. The Core Problem: Dimensionality Reduction
+
+Given a dataset $X = \{x_i\}_{i=1, 2, \dots, N}$ where each data point resides in a $D$-dimensional space ($x_i \in \mathbb{R}^D$):
+
+$$\text{How can we project } X \text{ onto an } M\text{-dimensional vector space where } M < D?$$
+
+$$X \in \mathbb{R}^{N \times D} \xrightarrow{\quad \text{Projection} \quad} Z \in \mathbb{R}^{N \times M}, \quad (M < D)$$
+
+### Visualizing Variance Along Projection Axes
+
+When searching for the optimal subspace to project data points onto:
+* **First Axis ($u_1$):** Points along the direction of maximum spread (highest variance). Projecting data onto $u_1$ preserves the maximum amount of structural information.
+* **Second Axis ($u_2$):** Orthogonal (perpendicular) to $u_1$, capturing the largest remaining variance.
+* If variance along $u_2$ is negligible compared to $u_1$, the data can be effectively compressed by dropping $u_2$ and keeping only the projection on $u_1$ with minimal information loss.
+
+---
+
+## 2. Fundamentals and Objectives of PCA
+
+Suppose the dataset to be reduced consists of vectors characterized by $n$ features:
+
+1. **Optimal Representation:** PCA searches for $k \le n$ orthonormal basis vectors that can best represent the data with minimal reconstruction error.
+2. **Dimensionality Reduction:** By projecting the original high-dimensional observations onto this smaller $k$-dimensional subspace, dimensionality reduction is achieved.
+3. **Linear Feature Combination:** Rather than simply discarding original features, PCA constructs linear combinations of existing features to create an alternative, smaller set of uncorrelated variables (principal components).
+4. **Subspace Mapping:** The original data points are mapped onto these new principal axes.
+
+---
+
+## 3. Step-by-Step PCA Algorithm
+
+$$\begin{aligned}
+\text{1. Standardization} &\longrightarrow \mu = 0, \; \sigma = 1 \\
+&\quad \downarrow \\
+\text{2. Covariance Matrix} &\longrightarrow \Sigma = \frac{1}{N-1} X^T X \\
+&\quad \downarrow \\
+\text{3. Eigen-Decomposition} &\longrightarrow \Sigma u_i = \lambda_i u_i \\
+&\quad \downarrow \\
+\text{4. Component Selection} &\longrightarrow \text{Select top } k \text{ eigenvectors by largest } \lambda \\
+&\quad \downarrow \\
+\text{5. Projection} &\longrightarrow Z = X W \quad (Z \in \mathbb{R}^{N \times k})
+\end{aligned}$$
+
+### Detailed Steps:
+
+1. **Standardization (Normalization):**
+   Especially when features are measured in different units or across varying scales, features are normalized so that each has a mean of $0$ and a standard deviation of $1$:
+   $$z = \frac{x - \mu}{\sigma}$$
+
+2. **Covariance Matrix Construction:**
+   Using the standardized data, compute the covariance matrix ($\Sigma$) to measure pairwise linear relationships and spread between features:
+   $$\Sigma = \frac{1}{N-1} X^T X$$
+
+3. **Eigen-Decomposition of the Covariance Matrix:**
+   Compute the eigenvalues ($\lambda$) and eigenvectors ($u$) of the covariance matrix:
+   $$\det(\Sigma - \lambda I) = 0 \implies \Sigma u = \lambda u$$
+
+4. **Explained Variance and Component Selection:**
+   * **Eigenvalues ($\lambda_i$):** Quantify the amount of total data variance explained by each corresponding eigenvector.
+   * **First Principal Component:** The eigenvector associated with the largest eigenvalue ($\lambda_{\max}$) points in the direction of greatest variance and is selected as the 1st principal component.
+   * The top $k$ eigenvectors with the largest eigenvalues are stacked as columns to form the projection matrix $W \in \mathbb{R}^{n \times k}$.
+
+5. **Coordinate Transformation (Projection):**
+   The original data points are projected onto the newly selected coordinate system:
+   $$Z = X \cdot W$$
+
+---
+
+## 4. Key Components of PCA
+
+| PCA Component (Bileşen) | Mathematical Foundation (Matematiksel Temeli) | Meaning & Role (Anlamı ve Rolü) |
+| :--- | :--- | :--- |
+| **Eigenvector (Özvektör)** | Derived directly from the covariance matrix ($\Sigma u = \lambda u$) | **New Axis Directions:** The directional vectors of the new coordinate system (Principal Components). |
+| **Eigenvalue (Özdeğer)** | Calculated alongside each eigenvector | **Explained Variance:** The amount of data spread/variance captured along that specific axis. |
+
+---
+
+# Systems of Linear Equations & Linear Regression Foundations
+
+## 1. General System of Linear Equations
+
+A **system of linear equations** is a finite collection of algebraic equations involving multiple variables, where every variable appears exclusively to the first degree (no powers, cross-products, or non-linear terms).
+
+Mathematically, a system of $m$ linear equations with $n$ unknowns is written as:
+
+$$\begin{aligned}
+\theta_{11} x_1 + \theta_{12} x_2 + \cdots + \theta_{1n} x_n &= y_1 \\
+\theta_{21} x_1 + \theta_{22} x_2 + \cdots + \theta_{2n} x_n &= y_2 \\
+&\;\;\vdots \\
+\theta_{m1} x_1 + \theta_{m2} x_2 + \cdots + \theta_{mn} x_n &= y_m
+\end{aligned}$$
+
+### Compact Matrix-Vector Formulation
+
+This entire system is expressed compactly as:
+
+$$\theta x = y$$
+
+Where:
+* $\theta \in \mathbb{R}^{m \times n}$: **Coefficient Matrix (Katsayılar Matrisi)**
+* $x \in \mathbb{R}^n$: **Vector of Unknowns (Bilinmeyen Vektörü)**
+* $y \in \mathbb{R}^m$: **Output / Target Vector (Sonuç Vektörü)**
+
+$$\begin{bmatrix} 
+\theta_{11} & \theta_{12} & \cdots & \theta_{1n} \\ 
+\theta_{21} & \theta_{22} & \cdots & \theta_{2n} \\ 
+\vdots & \vdots & \ddots & \vdots \\ 
+\theta_{m1} & \theta_{m2} & \cdots & \theta_{mn} 
+\end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix} = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_m \end{bmatrix}$$
+
+---
+
+## 2. Modeling Real-World Relationships: Salary vs. Spending
+
+Consider modeling the relationship between individuals' monthly salaries and monthly expenditures across a dataset of $n$ individuals.
+
+### Dataset Variables:
+* $x_i$: Monthly salary of individual $i$ $\longrightarrow$ **Independent Variable (Bağımsız Değişken / Feature)**
+* $y_i$: Monthly expenditure of individual $i$ $\longrightarrow$ **Dependent Variable (Bağımlı Değişken / Target)**
+
+### Linear Equation Setup:
+Assuming expenditures depend linearly on salary via weight $\omega$ (slope) and baseline intercept $b$ (bias):
+
+$$\begin{aligned}
+y_1 &= \omega x_1 + b \\
+y_2 &= \omega x_2 + b \\
+&\;\;\vdots \\
+y_n &= \omega x_n + b
+\end{aligned} \quad \implies \quad y = \omega x + b$$
+
+---
+
+## 3. Matrix Representation of Linear Regression ($\hat{y} = X\theta$)
+
+In real-world data, observed values scatter around the regression line due to noise. We denote our model's predictions as $\hat{y}$:
+
+$$y \approx \hat{y} = \omega x + b$$
+
+To incorporate the intercept term $b$ uniformly into matrix operations, an augmented column of $1$s is added to the feature matrix:
+
+$$X = \begin{bmatrix} 
+1 & x_1 \\ 
+1 & x_2 \\ 
+\vdots & \vdots \\ 
+1 & x_n 
+\end{bmatrix}_{n \times 2}, \quad 
+\theta = \begin{bmatrix} b \\ \omega \end{bmatrix}_{2 \times 1}, \quad 
+y = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_n \end{bmatrix}_{n \times 1}$$
+
+### Model Prediction Equation:
+
+$$\hat{y} = X \theta$$
+
+Multiplying $X$ and $\theta$ verifies the formulation:
+
+$$\hat{y} = \begin{bmatrix} 
+1 & x_1 \\ 
+\vdots & \vdots \\ 
+1 & x_n 
+\end{bmatrix} \begin{bmatrix} b \\ \omega \end{bmatrix} = \begin{bmatrix} b + \omega x_1 \\ \vdots \\ b + \omega x_n \end{bmatrix}$$
+
+---
+
+## 4. Ordinary Least Squares (OLS) Optimization
+
+Given $n$ data pairs $(x, y)$, we search for the best-fit line:
+
+$$\hat{y} = \theta_0 + \theta_1 x \quad (\text{where } \theta_0 = b, \; \theta_1 = \omega)$$
+
+### Cost Function (Sum of Squared Errors):
+We minimize the sum of squared differences between actual targets $y$ and predictions $\hat{y}$:
+
+$$J(\theta_0, \theta_1) = \sum_{i=1}^n (y_i - \hat{y}_i)^2 = \sum_{i=1}^n \big(y_i - (\theta_0 + \theta_1 x_i)\big)^2$$
+
+### Finding Optimal Parameters via Partial Derivatives
+
+To minimize the Sum of Squared Errors ($SSE$), we apply the chain rule to compute the partial derivatives with respect to $\theta_0$ and $\theta_1$:
+
+$$\frac{\partial SSE(\theta_0, \theta_1)}{\partial \theta_0} = \frac{\partial}{\partial \theta_0} \left[ \sum_{i=1}^n \big(y_i - (\theta_0 + \theta_1 x_i)\big)^2 \right] = -2 \sum_{i=1}^n \big(y_i - (\theta_0 + \theta_1 x_i)\big) \quad \cdots (2)$$
+
+$$\frac{\partial SSE(\theta_0, \theta_1)}{\partial \theta_1} = \frac{\partial}{\partial \theta_1} \left[ \sum_{i=1}^n \big(y_i - (\theta_0 + \theta_1 x_i)\big)^2 \right] = -2 \sum_{i=1}^n \big(y_i - (\theta_0 + \theta_1 x_i)\big) x_i \quad \cdots (3)$$
+
+### Closed-Form Analytical Solution (Normal Equations)
+
+Setting equations $(2)$ and $(3)$ equal to zero to find the critical minimum points:
+
+Defining the sample means:
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^n x_i, \quad \bar{y} = \frac{1}{n} \sum_{i=1}^n y_i$$
+
+Solving this system yields the optimal closed-form parameters:
+
+$$\theta_0 = \bar{y} - \theta_1 \bar{x}$$
+
+$$\theta_1 = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2} = \frac{\operatorname{Cov}(x, y)}{\operatorname{Var}(x)}$$
+
+* $\theta_1$ (Slope): Represents the covariance of $x$ and $y$ normalized by the variance of $x$.
+* $\theta_0$ (Intercept): Ensures the regression line passes directly through the centroid of the data $(\bar{x}, \bar{y})$.
+
+---
+
+## 5. Practical Example: Work Duration vs. Label Count
+
+Consider training a simple linear regression model on the productivity of team members:
+
+* **Independent Variable ($x$):** Work Duration (Çalışma Süresi)
+* **Dependent Variable ($y$):** Number of Labels Produced (Etiket Sayısı)
+
+### Training Dataset:
+
+| Team Member (Ekip Üyesi) | Work Duration ($x$) | Label Count ($y$) |
+| :--- | :---: | :---: |
+| Employee 1 | 182 | 77 |
+| Employee 2 | 175 | 69 |
+| Employee 3 | 188 | 83 |
+| Employee 4 | 190 | 85 |
+| Employee 5 | 178 | 73 |
+| Employee 6 | 180 | 75 |
+| Employee 7 | 185 | 78 |
+| Employee 8 | 179 | 74 |
+| Employee 9 | 183 | 76 |
+| Employee 10 | 177 | 70 |
+| Employee 11 | 174 | 72 |
+
+### Model Fit
+Applying the analytical formulas for $\theta_0$ and $\theta_1$ on this dataset yields the optimal fitted line:
+
+$$\hat{y} = \theta_0 + \theta_1 x$$
+
+This line minimizes the sum of squared errors across all 11 observations and enables predicting the expected label output for any unseen work duration $x$.
+
+
+
+
 
 
 
