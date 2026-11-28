@@ -817,12 +817,12 @@ $$\theta_1 = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_
 
 Consider training a simple linear regression model on the productivity of team members:
 
-* **Independent Variable ($x$):** Work Duration (Çalışma Süresi)
-* **Dependent Variable ($y$):** Number of Labels Produced (Etiket Sayısı)
+* **Independent Variable ($x$):** Work Duration (in minutes)
+* **Dependent Variable ($y$):** Number of Labels Produced (count)
 
 ### Training Dataset:
 
-| Team Member (Ekip Üyesi) | Work Duration ($x$) | Label Count ($y$) |
+| Team Member | Work Duration ($x$) | Label Count ($y$) |
 | :--- | :---: | :---: |
 | Employee 1 | 182 | 77 |
 | Employee 2 | 175 | 69 |
@@ -842,6 +842,94 @@ Applying the analytical formulas for $\theta_0$ and $\theta_1$ on this dataset y
 $$\hat{y} = \theta_0 + \theta_1 x$$
 
 This line minimizes the sum of squared errors across all 11 observations and enables predicting the expected label output for any unseen work duration $x$.
+
+---
+
+# Locally Weighted Linear Regression (LWLR)
+
+## 1. Feature Engineering and Non-Linear Relationships
+
+Standard linear regression assumes a strictly linear mapping between the input feature $x$ and the target $y$:
+
+$$h_\theta(x) = \theta_0 + \theta_1 x$$
+
+When the underlying data distribution exhibits curvature, standard linear regression leads to underfitting. To capture non-linear trends within a linear regression framework, one approach is **feature engineering**—expanding the input representation by creating non-linear transformations of $x$:
+
+* **Polynomial Degree 2:**
+  $$h_\theta(x) = \theta_0 + \theta_1 x + \theta_2 x^2$$
+* **Square Root Transformation:**
+  $$h_\theta(x) = \theta_0 + \theta_1 x + \theta_2 \sqrt{x}$$
+* **Multi-Transform Representation:**
+  $$h_\theta(x) = \theta_0 + \theta_1 x + \theta_2 \sqrt{x} + \theta_3 \log x$$
+
+By defining new synthetic features:
+$$x_1 = x, \quad x_2 = \sqrt{x}, \quad x_3 = \log x$$
+the model remains linear in its parameters $\theta$, but non-linear with respect to the original input $x$.
+
+However, choosing the appropriate polynomial degree or transformation functions manually can be difficult and prone to overfitting or high dimensional expansion.
+
+---
+
+## 2. Parametric vs. Non-Parametric Algorithms
+
+| Characteristic | Parametric Learning Algorithms | Non-Parametric Learning Algorithms |
+| :--- | :--- | :--- |
+| **Parameter Count** | Fixed, finite set of parameters $\theta$ determined prior to training. | Number of effective parameters grows with the size of the training dataset. |
+| **Model Assumptions** | Strong assumption about the functional form of $f(x)$ (e.g., straight line or fixed degree polynomial). | Minimal assumptions about the underlying data distribution. |
+| **Data Retention** | Once parameters $\theta$ are learned, training data can be discarded. | Training data must be retained in memory to make predictions at test time. |
+| **Examples** | Standard Linear Regression, Logistic Regression. | Locally Weighted Linear Regression (LWLR), $k$-Nearest Neighbors ($k$-NN). |
+
+---
+
+## 3. Locally Weighted Linear Regression Formulation
+
+Locally Weighted Linear Regression (LWLR) is a non-parametric algorithm that fits a local linear model around a query point $x$ at prediction time.
+
+### Standard Linear Regression vs. Locally Weighted Regression
+
+* **Standard Linear Regression:**
+  Fits a single global parameter vector $\theta$ to minimize:
+  $$J(\theta) = \frac{1}{2} \sum_{i=1}^m \left(y^{(i)} - \theta^T x^{(i)}\right)^2$$
+  Predictions across the entire input space use the exact same fixed $\theta$:
+  $$\hat{y} = \theta^T x$$
+
+* **Locally Weighted Linear Regression:**
+  To evaluate a prediction at a specific query point $x$, a local parameter vector $\theta$ is optimized by minimizing a weighted sum of squared errors:
+  $$J(\theta) = \frac{1}{2} \sum_{i=1}^m \omega^{(i)} \left(y^{(i)} - \theta^T x^{(i)}\right)^2$$
+  Here, $\theta$ is not global; a new optimization is performed for each query point $x$, weighting nearby points more heavily than distant points.
+
+---
+
+## 4. Weighting Kernel Function
+
+The weight $\omega^{(i)}$ assigned to the $i$-th training example $(x^{(i)}, y^{(i)})$ depends exponentially on its Euclidean distance to the query point $x$:
+
+$$\omega^{(i)} = \exp\left( -\frac{\left(x^{(i)} - x\right)^2}{2\tau^2} \right)$$
+
+### Properties of the Weight Function:
+* **Close Points:** If $|x^{(i)} - x|$ is small (training example is close to query point $x$):
+  $$\omega^{(i)} \approx 1$$
+* **Distant Points:** If $|x^{(i)} - x|$ is large (training example is far from query point $x$):
+  $$\omega^{(i)} \approx 0$$
+
+Training examples far outside the localized neighborhood $[x - \tau, x + \tau]$ contribute negligibly to the cost function, allowing the model to focus exclusively on local data geometry.
+
+---
+
+## 5. The Bandwidth Parameter ($\tau$) and Bias-Variance Tradeoff
+
+The hyperparameter $\tau$, known as the **bandwidth parameter**, controls the width of the Gaussian weighting window:
+
+* **Small $\tau$ (Narrow Window):**
+  * Weights drop off sharply; only immediately adjacent points influence the fit.
+  * **Low Bias, High Variance $\longrightarrow$ Overfitting.**
+  * The model fits noise and local fluctuations, producing an erratic, jagged decision surface.
+
+* **Large $\tau$ (Wide Window):**
+  * Weights decay slowly; nearly all training points receive non-zero weights regardless of distance.
+  * **High Bias, Low Variance $\longrightarrow$ Underfitting.**
+  * The model approaches standard unweighted global linear regression, failing to capture subtle local non-linearities.
+
 
 
 
